@@ -20,3 +20,9 @@ urlpatterns = [
 	url(r'^', include('todo.urls')),
     url(r'^admin/', admin.site.urls),
 ]
+
+
+urlpatterns += [
+    url(r'^api-auth/', include('rest_framework.urls',
+                                namespace='rest_framework')),
+]
