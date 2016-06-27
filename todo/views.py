@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework import filters
 from rest_framework import permissions
+from rest_framework.pagination import PageNumberPagination
 
 from todo.models import Task
 from todo.serializers import TaskSerializer
@@ -17,13 +18,20 @@ from todo.serializers import UserPostSerializer
 from todo.permissions import IsAdminOrNewUser, IsOwnerOrReadOnly
 
 
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'limit'
+    max_page_size = 1000
+
+
+
 class TaskFilter(filters.FilterSet):
-    due_date = django_filters.DateTimeFilter(name="due_date",
+    max_due_date = django_filters.DateTimeFilter(name="due_date",
                                             lookup_type="lt")
 
     class Meta:
         model = Task
-        fields = ['due_date']
+        fields = ['max_due_date', 'time', 'is_active', 'is_completed']
 
 class TaskList(generics.ListCreateAPIView):
     queryset = Task.objects.filter(is_active = True)
@@ -31,20 +39,30 @@ class TaskList(generics.ListCreateAPIView):
     authentication_classes = (BasicAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     filter_backends = (filters.DjangoFilterBackend,)
-    filter_fields = ('due_date')
+    pagination_class = StandardResultsSetPagination
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
     def list(self, request):
         user = request.user
-        print user.username
-        queryset = self.get_queryset()
-        queryset = queryset.filter(owner=user)
-        serializer = TaskSerializer(queryset, many=True)
         response = {}
         status = {}
         data = {}
+        queryset = self.get_queryset()
+        queryset = queryset.filter(owner=user)
+        queryset = TaskFilter(request.GET, queryset)
+        queryset = self.paginate_queryset(queryset)
+        serializer = TaskSerializer(queryset, many=True)
+ 
+        if serializer.is_valid():
+            status['success'] = False
+            error = {}
+            error['msg'] = 'Invalid Page'
+            status['error'] = error
+            response['status'] = status
+            return Response(response, status=404)
+
         status['success']=True
         data['tasks']=serializer.data
         response['status'] = status
