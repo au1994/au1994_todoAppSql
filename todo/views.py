@@ -1,79 +1,80 @@
+import django_filters
+
 from django.contrib.auth.models import User
 
+from rest_framework.authentication import BasicAuthentication
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import generics
+from rest_framework import filters
 from rest_framework import permissions
 
 from todo.models import Task
 from todo.serializers import TaskSerializer
 from todo.serializers import UserSerializer
+from todo.serializers import UserPostSerializer
+from todo.permissions import IsAdminOrNewUser, IsOwnerOrReadOnly
 
 
-# Create your views here.
-'''
-@api_view(['GET', 'POST'])
-def task_list(request):
-    """
-    List all tasks, or create a new task.
-    """
-    if request.method == 'GET':
-        tasks = Task.objects.all()
-        serializer = TaskSerializer(tasks, many=True)
-        return Response(serializer.data)
+class TaskFilter(filters.FilterSet):
+    due_date = django_filters.DateTimeFilter(name="due_date",
+                                            lookup_type="lt")
 
-    elif request.method == 'POST':
-        serializer = TaskSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    class Meta:
+        model = Task
+        fields = ['due_date']
 
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def task_detail(request, pk):
-    """
-    Retrieve, update or delete a task instance.
-    """
-    try:
-        task = Task.objects.get(pk=pk)
-    except Task.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-
-    if request.method == 'GET':
-        serializer = TaskSerializer(task)
-        return Response(serializer.data)
-
-    elif request.method == 'PUT':
-        serializer = TaskSerializer(task, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    elif request.method == 'DELETE':
-        task.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-'''
 class TaskList(generics.ListCreateAPIView):
-    queryset = Task.objects.all()
+    queryset = Task.objects.filter(is_active = True)
     serializer_class = TaskSerializer
+    authentication_classes = (BasicAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_fields = ('due_date')
+
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
-    permission_classes = (permissions.IsAuthenticated,)
+
+    def list(self, request):
+        user = request.user
+        print user.username
+        queryset = self.get_queryset()
+        queryset = queryset.filter(owner=user)
+        serializer = TaskSerializer(queryset, many=True)
+        response = {}
+        status = {}
+        data = {}
+        status['success']=True
+        data['tasks']=serializer.data
+        response['status'] = status
+        response['data'] = data
+        return Response(response)
 
 
 class TaskDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    authentication_classes = (BasicAuthentication,)
+    permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
+    def delete(self, request, pk):
+        task = Task.objects.get(id=pk)
+        task.is_active = False
+        task.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-class UserList(generics.ListAPIView):
+        
+class UserList(generics.ListCreateAPIView):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = (permissions.IsAdminUser,)
+    serializer_class = UserPostSerializer
+    permission_classes = (IsAdminOrNewUser,)
+
+    def list(self, request):
+        queryset = self.get_queryset()
+        serializer = UserSerializer(queryset, many=True)
+        return Response(serializer.data)
+
 
 
 class UserDetail(generics.RetrieveAPIView):

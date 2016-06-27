@@ -10,5 +10,6 @@ class Task(models.Model):
     due_date = models.DateTimeField(blank=True, null=True)
     time = models.DateTimeField(blank=True, null=True)
     is_completed = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     owner = models.ForeignKey('auth.User', related_name='tasks')
 
