@@ -7,8 +7,7 @@ class IsAdminOrNewUser(permissions.BasePermission):
         if request.method == 'POST':
             return True
 
-        #return request.user.has_perm(permissions.IsAdminUser, obj=None)
-        return False
+        return request.user.has_perm(permissions.IsAdminUser, obj=None)
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
 

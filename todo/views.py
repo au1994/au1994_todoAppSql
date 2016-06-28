@@ -2,7 +2,7 @@ import django_filters
 
 from django.contrib.auth.models import User
 
-from rest_framework.authentication import BasicAuthentication
+from rest_framework.authentication import TokenAuthentication
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -36,7 +36,7 @@ class TaskFilter(filters.FilterSet):
 class TaskList(generics.ListCreateAPIView):
     queryset = Task.objects.filter(is_active = True)
     serializer_class = TaskSerializer
-    authentication_classes = (BasicAuthentication,)
+    authentication_classes = (TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated,)
     filter_backends = (filters.DjangoFilterBackend,)
     pagination_class = StandardResultsSetPagination
@@ -73,7 +73,7 @@ class TaskList(generics.ListCreateAPIView):
 class TaskDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
-    authentication_classes = (BasicAuthentication,)
+    authentication_classes = (TokenAuthentication,)
     permission_classes = (permissions.IsAuthenticated, IsOwnerOrReadOnly)
 
     def delete(self, request, pk):
