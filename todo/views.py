@@ -54,7 +54,7 @@ class TaskList(generics.ListCreateAPIView):
         queryset = TaskFilter(request.GET, queryset)
         queryset = self.paginate_queryset(queryset)
         serializer = TaskSerializer(queryset, many=True)
- 
+        ''' 
         if serializer.is_valid():
             status['success'] = False
             error = {}
@@ -62,7 +62,7 @@ class TaskList(generics.ListCreateAPIView):
             status['error'] = error
             response['status'] = status
             return Response(response, status=404)
-
+        '''
         status['success']=True
         data['tasks']=serializer.data
         response['status'] = status
