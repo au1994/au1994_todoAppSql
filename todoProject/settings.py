@@ -39,20 +39,33 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
+    'corsheaders',
     'todo',
+    'push_notifications',
+    'gcm',
+    'django_extensions',
 ]
+
+PUSH_NOTIFICATIONS_SETTINGS = {
+        "GCM_API_KEY": "AIzaSyCgvC4H3BagTrXpOM1GZfCY-V8xC36-sJs",
+}
+
 
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': 
     ('rest_framework.filters.DjangoFilterBackend',),
 
     'DEFAULT_PAGINATION_CLASS':
-    'rest_framework.pagination.PageNumberPagination'
+    'rest_framework.pagination.PageNumberPagination',
+
+    'EXCEPTION_HANDLER':
+    'todo.exceptions.custom_exception_handler'
     }
 
 MIDDLEWARE_CLASSES = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -60,6 +73,8 @@ MIDDLEWARE_CLASSES = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CORS_ORIGIN_ALLOW_ALL = True
 
 ROOT_URLCONF = 'todoProject.urls'
 
@@ -114,6 +129,14 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
+
+#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'abcdxyztodo@gmail.com'
+EMAIL_HOST_PASSWORD = 'au_5305051'
+EMAIL_USE_TLS = True
+#EMAIL_USE_SSL = True
 
 LANGUAGE_CODE = 'en-us'
 
