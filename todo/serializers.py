@@ -9,6 +9,7 @@ from push_notifications.models import GCMDevice
 from todo.models import Task, Notification
 
 class TaskSerializer(serializers.ModelSerializer):
+
     owner = serializers.ReadOnlyField(source='owner.username')
     
     class Meta:
@@ -18,8 +19,6 @@ class TaskSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    #tasks = serializers.PrimaryKeyRelatedField(many=True,
-            #queryset=Task.objects.all())
 
     class Meta:
         model = User
@@ -95,5 +94,5 @@ class NotificationSerializer(serializers.ModelSerializer):
 class GooglePlusSerializer(serializers.Serializer):
     email_id = serializers.CharField()
     access_token = serializers.CharField()
-    #given_name = serializers.CharField(blank=True)
+    
 

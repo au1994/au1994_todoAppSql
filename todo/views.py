@@ -45,10 +45,7 @@ def send_email(user):
     
     token = Token.objects.create(user=u)
     token.save()
-    print u.id
-    print u.username
     rand = u.password[-30:]
-    print rand
     subject = "Todo App Email Verification"
     message = "http://localhost:8000/verify_account.html?id=" + str(u.id) + "&user=" + u.username + "&token=" + str(rand)
     from_email = "abhishek.upadhyay.cse12@iitbhu.ac.in"
@@ -57,6 +54,7 @@ def send_email(user):
 
 
 def get_response(response_data, data_resource):
+
     response = {}
     status = {}
     data = {}
@@ -68,6 +66,7 @@ def get_response(response_data, data_resource):
 
 
 class StandardResultsSetPagination(PageNumberPagination):
+
     page_size = 20
     page_size_query_param = 'limit'
     max_page_size = 1000
@@ -75,6 +74,7 @@ class StandardResultsSetPagination(PageNumberPagination):
 
 
 class TaskFilter(filters.FilterSet):
+
     max_due_date = django_filters.DateTimeFilter(name="due_date",
                                             lookup_type="lt")
     min_due_date = django_filters.DateTimeFilter(name="due_date",
@@ -85,6 +85,7 @@ class TaskFilter(filters.FilterSet):
         fields = ['max_due_date', 'min_due_date', 'time', 'is_active', 'is_completed']
 
 class TaskList(generics.ListCreateAPIView):
+
     queryset = Task.objects.filter(is_active = True)
     serializer_class = TaskSerializer
     authentication_classes = (TokenAuthentication,)
@@ -97,6 +98,7 @@ class TaskList(generics.ListCreateAPIView):
         serializer.save(owner=self.request.user)
 
     def list(self, request):
+
         user = request.user
         queryset = self.get_queryset()
         queryset = queryset.filter(owner=user)
@@ -109,6 +111,7 @@ class TaskList(generics.ListCreateAPIView):
 
 
 class TaskDetail(generics.RetrieveUpdateDestroyAPIView):
+
     queryset = Task.objects.filter(is_active=True)
     serializer_class = TaskSerializer
     authentication_classes = (TokenAuthentication,)
@@ -128,6 +131,7 @@ class TaskDetail(generics.RetrieveUpdateDestroyAPIView):
 
         
 class UserList(generics.ListCreateAPIView):
+
     queryset = User.objects.all()
     serializer_class = UserPostSerializer
     permission_classes = (IsAdminOrNewUser,)
@@ -141,16 +145,14 @@ class UserList(generics.ListCreateAPIView):
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
         username = serializer.initial_data['username']
-        print 'username'
-        print username
+    
         try: 
             user = User.objects.get(username=username)
-            print 'in try'
+            
             pwd = user.password
-            print 'pwd'
-            print pwd
+            
             if pwd == '':
-                print 'in if'
+                
                 password = serializer.initial_data['password']
                 if password is not None:
                     user.set_password(password)
@@ -162,7 +164,7 @@ class UserList(generics.ListCreateAPIView):
             else:
                 return Response({'error':'user already exists'}, status=400)
         except:
-            print 'in except'
+            
             serializer.is_valid(raise_exception=True)
             user = serializer.validated_data['username']
             self.perform_create(serializer)
@@ -174,6 +176,7 @@ class UserList(generics.ListCreateAPIView):
                 send_email(user)
             except:
                 print "email sending failed"
+
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers) 
 
     def perform_create(self, serializer):
@@ -183,6 +186,7 @@ class UserList(generics.ListCreateAPIView):
 
 
 class UserDetail(generics.RetrieveAPIView):
+
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (permissions.IsAdminUser,)
@@ -193,12 +197,9 @@ class TokenDetail(APIView):
     def post(self, request):
         serializer = TokenSerializer(data=request.data)
         usr = serializer.initial_data['username']
-        print 'usr'
-        print usr
         try:
             usr = User.objects.get(username=usr)
-            print 'pass'
-            print usr.password
+            
             if usr.password =='':
                 return Response({'error':'null password'})
 
@@ -208,7 +209,7 @@ class TokenDetail(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         u = User.objects.get(username=user)
-        print u
+        
         if u.is_active:
             token, created = Token.objects.get_or_create(user=user)
             return Response({'token': token.key})
@@ -219,28 +220,25 @@ class TokenDetail(APIView):
         user_id = self.request.query_params.get('id', None)
         user = self.request.query_params.get('user', None)
         token = self.request.query_params.get('token', None)
-        print user_id
-        print user
-        print token
+        
         if user_id and user and token:
             u = User.objects.get(username=user)
             pwd = u.password[-30:]
-            print pwd
+            
             if token == pwd:
-                print u.id
+                
                 u.is_active = True
                 u.save()
-                print u.is_active
-                print "token verified"
+                
                 return Response("user verified")
             else:
-                print "here"
                 return Response("user not verified")
 
         else:
             return Response("some fields are missing verified")
 
 class GCMDeviceList(generics.ListCreateAPIView):
+
     queryset = GCMDevice.objects.all()
     serializer_class = GCMDeviceSerializer
     authentication_classes = (TokenAuthentication,)
@@ -251,6 +249,7 @@ class GCMDeviceList(generics.ListCreateAPIView):
 
 
 class GCMDeviceDetail(generics.RetrieveUpdateDestroyAPIView):
+
     queryset = GCMDevice.objects.all()
     serializer_class = GCMDeviceSerializer
     authentication_classes = (TokenAuthentication,)
@@ -258,6 +257,7 @@ class GCMDeviceDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class NotificationList(generics.ListCreateAPIView):
+
     queryset = Notification.objects.filter(is_active=True)
     serializer_class = NotificationSerializer
     authentication_classes = (TokenAuthentication,)
@@ -265,6 +265,7 @@ class NotificationList(generics.ListCreateAPIView):
 
 
 class NotificationDetail(generics.RetrieveUpdateDestroyAPIView):
+
     queryset = Notification.objects.filter(is_active=True)
     serializer_class = NotificationSerializer
     authentication_classes = (TokenAuthentication,)
@@ -272,6 +273,7 @@ class NotificationDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 class GooglePlus(APIView):
+
     def post(self, request):
         serializer = GooglePlusSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -286,12 +288,11 @@ class GooglePlus(APIView):
                 user.save()
                 token = Token.objects.create(user=user)
                 token.save()
-                print "new user"
                 return Response({'token': token.key})
             
             else:
                 return Response({'error': "some fields are missing"})
 
-        print "existing user"
+        
         token, created = Token.objects.get_or_create(user=user)
         return Response({'token': token.key})

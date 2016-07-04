@@ -8,29 +8,9 @@ from django.dispatch import receiver
 
 from rest_framework.authtoken.models import Token
 
-# Create your models here.
-
-'''
-@receiver(post_save, sender=User)
-def create_auth_token(sender, instance=None, created=False, **kwargs):
-    if created:
-        Token.objects.create(user=instance)
-        u = User.objects.get(username=instance)
-        print u.id
-        print u.username
-        rand = u.password[-30:]
-        print rand
-        subject = "Todo App Email Verification"
-        message = "http://localhost:8000/verify_account.html?id=" + str(u.id) + "&user=" + u.username + "&token=" + str(rand)
-        from_email = "abhishek.upadhyay.cse12@iitbhu.ac.in"
-        to_email = u.username
-        send_mail(subject, message, from_email, [to_email], fail_silently=False)
-'''        
-
-
-
 
 class Task(models.Model):
+
     description = models.TextField(blank=True)
     due_date = models.DateTimeField(blank=True, null=True)
     time = models.TimeField(blank=True, null=True)
@@ -42,6 +22,7 @@ class Task(models.Model):
 
 
 class Notification(models.Model):
+    
     registration_id = models.TextField()
     title = models.TextField()
     body = models.TextField()

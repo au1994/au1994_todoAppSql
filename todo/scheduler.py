@@ -8,14 +8,15 @@ from push_notifications.models import GCMDevice
 
 from todo.models import Task,Notification
 
+
 def start_scheduler():
+    
     s = sched.scheduler(time.time, time.sleep)
     s.enter(1, 1, send_notification, (s,))
     s.run()
 
 def send_notification(sc):
     
-    print "yes doing job"
     nowtime = datetime.now() + timedelta(hours=5,minutes=30)
     tasktime = datetime.now() + timedelta(hours=7,minutes=30)
     tasks = Task.objects.filter(due_date__gt=nowtime)
